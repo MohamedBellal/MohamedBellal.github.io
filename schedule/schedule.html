@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>L'Homme Barbier - Prise de Rendez-vous</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* General styles */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            font-family: "Poppins", sans-serif;
+            overscroll-behavior-y: contain;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: "Poppins", sans-serif;
+            background: rgb(238, 174, 202);
+            background: radial-gradient(circle, rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+            padding: 0 10px;
+            margin: 0;
+            box-sizing: border-box;
+            height: 100vh;
+            overflow-y: hidden;
+            touch-action: pan-down;
+        }
+
+        h1 {
+            font-weight: 800;
+            margin: 2rem 0.5rem;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            margin-right: 20px;
+            margin-left: 20px;
+        }
+
+        label, input[type="button"], input[type="submit"], select {
+            display: block;
+            margin-top: 10px;
+            font-size: 1.2em;
+            width: 100%;
+        }
+
+        input[type="text"], select {
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1.2em;
+        }
+
+        input[type="submit"], input[type="button"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 0;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1.5em;
+        }
+
+        input[type="submit"]:hover, input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .custom-datepicker table, .timepicker-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .custom-datepicker th, .custom-datepicker td, .timepicker-table th, .timepicker-table td {
+            padding: 15px;
+            border: 1px solid #ccc;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .custom-datepicker td {
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+
+        .custom-datepicker td.disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .custom-datepicker .today {
+            background-color: #ff0;
+        }
+
+        .custom-datepicker td.selected {
+            background-color: #0f0;
+        }
+
+        /* CSS for hatching pattern */
+        .hatched {
+            background-color: #f8d7da;
+            background-image: linear-gradient(45deg, rgba(255, 0, 0, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 0, 0, 0.25) 50%, rgba(255, 0, 0, 0.25) 75%, transparent 75%, transparent);
+            background-size: 10px 10px;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        /* Media Queries for Mobile Devices */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+                margin: 1.5rem 0.5rem;
+            }
+
+            input[type="submit"], input[type="button"] {
+                padding: 12px 0;
+                font-size: 1.2em;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+                position: absolute;
+                top: 20%;
+                    
+            }
+
+            .custom-datepicker th, .custom-datepicker td, .timepicker-table th, .timepicker-table td {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+
+        /* Styles for calendar header */
+        #calendar-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            position: relative;
+        }
+
+        /* Styles for month navigation arrows */
+        .month-nav {
+            cursor: pointer;
+            font-size: 24px;
+            padding: 0 15px;
+            color: #333;
+            user-select: none;
+            transition: color 0.3s;
+        }
+
+        .month-nav:hover {
+            color: #000;
+        }
+
+        /* Month and year text style */
+        #monthYear {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Votre rendez-vous</h1>
+    <form id="appointmentForm">
+        <label for="name">Nom:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="barber_id">Coiffeur/Barbier:</label>
+        <select id="barber_id" name="barber_id" required>
+            <option value="1">Ahmed</option>
+            <option value="2">Abdel</option>
+            <option value="3">Kadir</option>
+        </select><br>
+
+        <input type="button" id="chooseDateButton" value="Choisir la date">
+        <input type="text" id="datepicker" name="date" required readonly="readonly"><br>
+
+        <input type="button" id="chooseTimeButton" value="Choisir l'heure">
+        <input type="text" id="time" name="time" required disabled><br>
+
+        <label for="service_id">Service:</label>
+        <select id="service_id" name="service_id" required>
+            <option value="1" data-link="https://buy.stripe.com/test_3cs5mv6KW2yk0Gk000">Coupe Homme</option>
+            <option value="2" data-link="https://buy.stripe.com/test_3cs5mv6KW8WI88M9AB">Coupe ado</option>
+            <option value="3" data-link="https://buy.stripe.com/test_6oEaGP8T43CoagUeUW">Coupe enfant</option>
+            <option value="4" data-link="https://buy.stripe.com/test_8wM7uD6KWb4QbkYcMP">FORFAIT coupe + barbe</option>
+        </select>
+
+        <input type="submit" value="Réserver">
+    </form>
+
+    <!-- Datepicker Modal -->
+    <div id="datepickerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="calendar-header">
+                <span id="prevMonth" class="month-nav">&#10094;</span> <!-- Left arrow -->
+                <span id="monthYear" class="month-year"></span> <!-- Month and year text -->
+                <span id="nextMonth" class="month-nav">&#10095;</span> <!-- Right arrow -->
+            </div>
+            <div id="custom-datepicker" class="custom-datepicker"></div>
+        </div>
+    </div>
+
+    <!-- Timepicker Modal -->
+    <div id="timepickerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <table class="timepicker-table"></table>
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function() {
+        let currentDate = new Date();
+
+        // Fonction pour générer le calendrier pour un mois et une année donnés
+        function generateCalendar(date) {
+            var days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+            var monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            var today = new Date();
+            var currentMonth = date.getMonth();
+            var currentYear = date.getFullYear();
+
+            // Mise à jour du texte du mois et de l'année
+            $('#monthYear').text(monthNames[currentMonth] + ' ' + currentYear);
+
+            var firstDay = new Date(currentYear, currentMonth, 1);
+            var startingDay = firstDay.getDay();
+            var totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            var html = '<table>';
+            html += '<tr>' + days.map(day => `<th>${day}</th>`).join('') + '</tr><tr>';
+
+            for (let i = 0; i < startingDay; i++) {
+                html += '<td></td>'; // remplir les cases vides
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                if ((day + startingDay - 1) % 7 === 0 && day > 1) {
+                    html += '</tr><tr>';
+                }
+                let dayString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let isDisabled = new Date(currentYear, currentMonth, day).getDay() === 0 || new Date(currentYear, currentMonth, day).getDay() === 1 ? 'disabled' : '';
+                html += `<td class="${isDisabled} ${today.toISOString().slice(0, 10) === dayString ? 'today' : ''}" data-date="${dayString}">${day}</td>`;
+            }
+
+            while ((totalDays + startingDay) % 7 !== 0) {
+                html += '<td></td>';
+                totalDays++;
+            }
+
+            html += '</tr></table>';
+            $('#custom-datepicker').html(html);
+
+            $('#custom-datepicker td').not('.disabled').click(function() {
+                if (!$(this).data('date')) return;
+                $('#custom-datepicker td').removeClass('selected');
+                $(this).addClass('selected');
+                $('#datepicker').val($(this).data('date'));
+                $('#datepickerModal').fadeOut();
+            });
+        }
+
+        // Gestionnaires d'événements pour naviguer entre les mois
+        $('#prevMonth').click(function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar(currentDate);
+        });
+
+        $('#nextMonth').click(function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar(currentDate);
+        });
+
+        // Ouvrir le modal de datepicker
+        $('#chooseDateButton').on('click', function() {
+            $('#datepickerModal').fadeIn();
+            generateCalendar(currentDate);
+        });
+
+        // Ouvrir le modal de timepicker
+        $('#chooseTimeButton').on('click', function() {
+            if ($('#datepicker').val() === "") {
+                alert("Veuillez entrer une date avant de choisir l'heure.");
+            } else {
+                $('#time').prop('disabled', false); // Activer le champ de temps
+                var barberId = $('#barber_id').val();
+                var date = $('#datepicker').val();
+                
+                // Récupérer les créneaux bloqués et les rendez-vous existants
+                $.ajax({
+                    url: 'fetch_blocked_slots.php',
+                    type: 'GET',
+                    data: { barber_id: barberId, date: date },
+                    success: function(response) {
+                        console.log(response);  // Afficher la réponse pour le débogage
+                        if (response.status === "success") {
+                            fillTimeSlots(response.blockedSlots, response.blockedSlotsPeriodicity, response.appointments);
+                            $('#timepickerModal').fadeIn(); // Ouvrir le modal de timepicker
+                        } else {
+                            alert("Erreur: " + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Erreur lors de la récupération des créneaux bloqués : " + error);
+                    }
+                });
+            }
+        });
+
+        // Fermer les modals lorsque l'on clique en dehors d'eux ou sur le bouton de fermeture
+        $(window).on('click', function(event) {
+            if ($(event.target).hasClass('modal')) {
+                $('.modal').fadeOut();
+            }
+        });
+
+        $('.close-button').click(function() {
+            $(this).closest('.modal').fadeOut();
+        });
+
+        // Soumettre le formulaire
+        $(document).ready(function() {
+            $('#appointmentForm').submit(function(event) {
+                event.preventDefault(); // Prévenir l'envoi classique du formulaire
+
+                var selectedService = $('#service_id option:selected');
+                var serviceId = selectedService.val(); // ID du service sélectionné
+
+                // Appel à votre serveur pour créer une session de paiement
+                $.ajax({
+                    url: 'create_checkout_session.php', // Chemin vers le fichier PHP sur votre serveur
+                    method: 'POST',
+                    data: { service_id: serviceId },
+                    success: function(response) {
+                        console.log(response); // Afficher la réponse pour le débogage
+                        if (response.error) {
+                            alert(response.error);
+                            return;
+                        }
+
+                        // Vérifiez que l'ID de session est bien présent dans la réponse
+                        if (!response.id) {
+                            alert("ID de session non reçu. Vérifiez la réponse du serveur.");
+                            return;
+                        }
+
+                        var stripe = Stripe('pk_test_51PpB1gIOn9mt42X6gVRBbbNqOCqRIDVFPFMgD1tUTQMz0kSRvXdCxchOpMAMJFTDIkCjDmoIFvidLSqvhJbZZUV000GlU0fdVD'); // Remplacez par votre clé publique Stripe
+                        stripe.redirectToCheckout({ sessionId: response.id })
+                            .then(function (result) {
+                                if (result.error) {
+                                    alert(result.error.message);
+                                }
+                            });
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Erreur lors de la création de la session de paiement : " + error);
+                    }
+                });
+            });
+        });
+
+
+        // Fonction pour remplir les créneaux horaires dans le modal de timepicker
+        function fillTimeSlots(blockedSlots, blockedSlotsPeriodicity, appointments) {
+            var selectedDay = new Date($('#datepicker').val()).getDay();
+            var hours = selectedDay === 6 ? 
+                ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'] : 
+                ['09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30'];
+
+            // Combiner tous les créneaux horaires bloqués
+            var disabledSlots = blockedSlots.concat(blockedSlotsPeriodicity, appointments);
+
+            var html = '<tr>';
+            hours.forEach(function(hour, index) {
+                // Convertir l'heure au même format que les créneaux bloqués pour la comparaison
+                let isDisabled = disabledSlots.includes(hour + ':00') ? 'disabled hatched' : 'available';
+                html += `<td class='${isDisabled}' data-time='${hour}'>${hour}</td>`;
+                if ((index + 1) % 4 === 0) {
+                    html += '</tr><tr>';
+                }
+            });
+            html += '</tr>';
+            $('.timepicker-table').html(html);
+
+            // Ajouter l'événement de clic aux créneaux horaires disponibles
+            $('.timepicker-table td.available').click(function() {
+                $('.timepicker-table td').removeClass('selected');
+                $(this).addClass('selected');
+                $('#time').val($(this).data('time'));
+                $('#timepickerModal').fadeOut();
+            });
+        }
+    });
+</script>
+
+
+
+</body>
+</html>

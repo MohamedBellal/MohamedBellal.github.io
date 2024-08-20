@@ -1,0 +1,192 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;800&display=swap");
+
+#container {
+    width: 80%;
+    margin: 2rem;
+}
+
+.calendar {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 0.5rem;
+    max-width: 100%;
+}
+
+.calendar li {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-height: 100px;
+    max-width: 100px;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding: 1rem;
+}
+
+.calendar li time {
+    font-size: 2rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.calendar li .has-appointments {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background: #ff686b;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.calendar li.today {
+    background: rgba(255, 255, 255, 0.8);
+    color: #ff686b;
+    font-weight: 700;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    /* margin: 30% auto; */
+    margin-top: 15%;
+    margin-left: 25%;
+    margin-right: 25%;
+    padding: 2rem;
+    border: 1px solid #888;
+    border-radius: 0.5rem;
+    max-width: 50%;
+    padding-top: 1%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.raise {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+@media (max-width: 600px) {
+    .calendar li {
+        width: 10vw;
+        height: 10vw;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .calendar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .calendar li {
+        min-height: 80px;
+    }
+    .modal-content {
+        width: 90%;
+        margin: 20% auto;
+    }
+}
+
+ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    flex-wrap: wrap;
+    list-style: none;
+}
+
+ul li {
+    display: flex;
+    width: 10rem;
+    height: 10rem;
+    margin: 0.25rem;
+    flex-flow: column;
+    border-radius: 0.2rem;
+    padding: 1rem;
+    font-weight: 300;
+    font-size: 0.8rem;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+ul li time {
+    font-size: 2rem;
+    margin: 0 0 1rem 0;
+    font-weight: 500;
+}
+
+.calendar li.today {
+    time {
+        font-weight: 800;
+    }
+    background: #ffffff70;
+}
+
+/* Add styles for the gauge-container and gauge */
+.gauge-container {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    width: 80%;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 5px;
+}
+
+.gauge {
+    height: 50%;
+    width: 0;
+    background-color: green;
+    border-radius: 5px;
+    transition: width 0.5s ease-in-out;
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+    /* Specific styles for tablets in landscape mode */
+    body {
+        zoom: 0.9; /* Adjust this zoom level as needed */
+    }
+}
+
+@media only screen and (min-width: 600px) and (max-width: 800px) {
+    /* Specific styles for tablets in portrait mode */
+    body {
+        zoom: 0.8; /* Adjust this zoom level as needed */
+    }
+}

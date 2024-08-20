@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stripe Checkout Client-Side Only</title>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <button id="checkout-button">Payer</button>
+
+  <script>
+    // Remplacez par votre clé publique Stripe
+    const stripe = Stripe('pk_test_51PpB1gIOn9mt42X6gVRBbbNqOCqRIDVFPFMgD1tUTQMz0kSRvXdCxchOpMAMJFTDIkCjDmoIFvidLSqvhJbZZUV000GlU0fdVD');
+
+    document.getElementById('checkout-button').addEventListener('click', () => {
+      // Créez une session de paiement directement via Stripe Checkout API côté client
+      fetch('https://api.stripe.com/v1/checkout/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer pk_test_51PpB1gIOn9mt42X6gVRBbbNqOCqRIDVFPFMgD1tUTQMz0kSRvXdCxchOpMAMJFTDIkCjDmoIFvidLSqvhJbZZUV000GlU0fdVD' // Votre clé secrète Stripe (ne pas utiliser en production)
+        },
+        body: JSON.stringify({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: 'T-shirt',
+                },
+                unit_amount: 2000, // Montant en cents
+              },
+              quantity: 1,
+            },
+          ],
+          mode: 'payment',
+          success_url: window.location.origin + '/success.html', // URL de succès
+          cancel_url: window.location.origin + '/cancel.html', // URL d'annulation
+        }),
+      })
+      .then(response => response.json())
+      .then(session => {
+        return stripe.redirectToCheckout({ sessionId: session.id });
+      })
+      .then(result => {
+        if (result.error) {
+          console.error(result.error.message);
+        }
+      })
+      .catch(error => {
+        console.error('Erreur lors de la création de la session de paiement:', error);
+      });
+    });
+  </script>
+</body>
+</html>
